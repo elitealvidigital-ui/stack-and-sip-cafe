@@ -111,9 +111,11 @@ export default function FrameSequence({ activeStage, onStageChange, onMenuClick 
     context.fillStyle = "#080908";
     context.fillRect(0, 0, width, height);
 
-    const containScale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
-    const drawWidth = image.naturalWidth * containScale;
-    const drawHeight = image.naturalHeight * containScale;
+    const scale = window.matchMedia("(max-width: 760px)").matches
+      ? Math.max(width / image.naturalWidth, height / image.naturalHeight)
+      : Math.min(width / image.naturalWidth, height / image.naturalHeight);
+    const drawWidth = image.naturalWidth * scale;
+    const drawHeight = image.naturalHeight * scale;
     const x = (width - drawWidth) / 2;
     const y = (height - drawHeight) / 2;
     context.drawImage(image, x, y, drawWidth, drawHeight);
@@ -125,9 +127,12 @@ export default function FrameSequence({ activeStage, onStageChange, onMenuClick 
       if (!cancelled) draw(0);
     });
     const onResize = () => draw();
+    const resizeObserver = new ResizeObserver(onResize);
+    if (canvasRef.current) resizeObserver.observe(canvasRef.current);
     window.addEventListener("resize", onResize, { passive: true });
     return () => {
       cancelled = true;
+      resizeObserver.disconnect();
       window.removeEventListener("resize", onResize);
     };
   }, []);
